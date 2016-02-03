@@ -2,4 +2,8 @@
 // Authors: S.Braun,J.Brehmer,M.Geisler,D.Mitzel
 //2016
 
+int main {
 
+  return 0;
+
+}
