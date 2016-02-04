@@ -65,34 +65,48 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   // Momenta in the proton-proton center-of-mass frame, all in GeV.
   // p1 and p2 are incoming momenta of u and ubar.
   // p3 and p4 are outgoing momenta of d and dbar.
-  momentum p1 = {1,0,0,1};
-  momentum p2 = {1,0,0,-1};
-  momentum p3 = {1,0,1,0};
-  momentum p4 = {1,0,-1,0};
+  momentum p1, p2, p3, p4;
 
-  // Transform z1 to z4 into four-momenta, taking into account the sqrtSMin cut
-  // and the fact that the quarks should not have more energy than 6500 GeV
-  // ...
+  // azimuthal angle of outgoing d quark
+  double phi3;
 
-  // Mandelstam variables
-  double s = (p1+p2)*(p1+p2);
-  double t = (p3-p1)*(p3-p1);
-  double u = (p4-p1)*(p4-p1);
+  // Mandelstam variables (in parton-level process)
+  double s, t, u;
 
-  // Calculate Jacobian
+  // Momentum fractions carried by initial quarks
+  double x1, x2;
+  double protonE = 6500.;
+  double protonS = pow(protonE,2);
+  
+  // Transform z1 to z4 into kinematics
+  // for now, just use a very-not-optimal scheme:
+  // z1 and z2 directly give x1 and x2, thus setting s
+  // z3 sets t, normalized such that z3 = 0 -> t = -s and z3 = 1 -> t = 0
+  // z4 sets phi of p3, normalised such that z4 = 1 -> phi = 2pi
+  x1 = z1;
+  x2 = z2;
+  s = z1*x2*protonS;
+  t = -s + z3*s;
+  phi3 = 2.*M_PI*z4;
+
+  // Calculate fourmomenta based on x1, x2, s, t, phi3 (to do)
+  p1 = (momentum){x1*protonE,0.,0.,x1*protonE};
+  p2 = (momentum){x2*protonE,0.,0.,-x2*protonE};
+  p3 = (momentum){0,0,0,0};
+  p4 = (momentum){0,0,0,0};
+  
+    
+
+  // Calculate Jacobian (to do)
   double JacobiDeterminant = 1.;
 
-  // Overall factor for hard matrix element
-  double overallConstant = 1.;
+  // Overall factor for hard matrix element (to do)
+  double overallConstant = 1./s;
 
-  // Calculate hard matrix elements
+  // Calculate hard matrix elements (to do)
   double MSquared = CalculateMSquared(s, t, u);
 
-  // Momentum fractions carried by quark 1 and 2
-  double protonE = 6500.; // in GeV
-  double x1 = p1.E / protonE;
-  double x2 = p2.E / protonE;
-  // Energy scale of hard process, important for  
+  // Pdfs
   double q = sqrt(s);
   int pdgid1 = 1; // up quark
   int pdgid2 = -1; // anti-up quark
@@ -118,7 +132,7 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
 
 double Generator::CalculateMSquared(double s, double t, double u)
 {
-  return 1.;
+  return 1./pow(t,2); // to do
 }
 
 
