@@ -21,6 +21,10 @@ class Generator
   friend double operator*( const momentum& left, const momentum& right ) {
     return left.E * right.E - left.px * right.px - left.py * right.py - left.pz * right.pz;
   }
+  friend std::ostream& operator<<(std::ostream &out, const momentum& right)
+  {
+    return out << "(" << right.E << ", " << right.px << ", " << right.py << ", " << right.pz << ")";
+  }
 
   // Constructor and destructor
   Generator(int NEventsIn, double sqrtSMinIn = 10., string filenameIn = "events.dat");

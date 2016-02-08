@@ -21,10 +21,10 @@ int main(int argc, char* argv[])
   cout << "------------------------------------------------------------" << endl;
 
   for (int i = 0; i < NEvents; i++) {
-    gen->NewEvent( (double) rand() / (double) (RAND_MAX + 1),
-		   (double) rand() / (double) (RAND_MAX + 1),
-		   (double) rand() / (double) (RAND_MAX + 1),
-		   (double) rand() / (double) (RAND_MAX + 1));
+    gen->NewEvent( (double) rand() / ((double) RAND_MAX + 1.),
+    		   (double) rand() / ((double) RAND_MAX + 1.),
+    		   (double) rand() / ((double) RAND_MAX + 1.),
+		   (double) rand() / ((double) RAND_MAX + 1.));
   }
 
   cout << "------------------------------------------------------------" << endl;

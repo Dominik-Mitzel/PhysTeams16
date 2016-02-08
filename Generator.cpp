@@ -76,7 +76,14 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   // Momentum fractions carried by initial quarks
   double x1, x2;
   double protonE = 6500.;
-  double protonS = pow(protonE,2);
+  double protonS = pow(2.*protonE,2);
+
+  // Check input variables are in (0,1) range
+  if (z1 < 0 || z2 < 0 || z3 < 0 || z4 < 0 || z1 > 1 || z2 > 1 || z3 > 1 || z4 > 1) {
+    cout << "Error: input numbers (" << z1 << ", " << z2 << ", " << z3 << ", " << z4
+	 << ") not all in [0,1] range! Ignoring event!" << endl;
+    return false;
+  }
   
   // Transform z1 to z4 into kinematics
   // for now, just use a very-not-optimal scheme:
@@ -85,17 +92,64 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   // z4 sets phi of p3, normalised such that z4 = 1 -> phi = 2pi
   x1 = z1;
   x2 = z2;
-  s = z1*x2*protonS;
+
+  // avoid division by zero later
+  if (x1 < 0.000000001) x1 = 0.000000001;
+  if (x2 < 0.000000001) x2 = 0.000000001;
+  
+  s = x1*x2*protonS;
   t = -s + z3*s;
   phi3 = 2.*M_PI*z4;
 
-  // Calculate fourmomenta based on x1, x2, s, t, phi3 (to do)
-  p1 = (momentum){x1*protonE,0.,0.,x1*protonE};
-  p2 = (momentum){x2*protonE,0.,0.,-x2*protonE};
-  p3 = (momentum){0,0,0,0};
-  p4 = (momentum){0,0,0,0};
+  // Debug output
+  cout << endl;
+  cout << "Input kinematics:" << endl;
+  cout << "  x1 = " << x1 << endl;
+  cout << "  x2 = " << x2 << endl;
+  cout << "  s = " << s << endl;
+  cout << "  t = " << t << endl;
+  cout << "  phi3 = " << phi3 << endl;
+  cout << endl;
+
+  // Calculate four-momenta based on x1, x2, s, t, phi3 (to do)
+  double pt = sqrt(-t*(t+s)) / (sqrt(s));
   
-    
+  p1 = (momentum){x1*protonE,
+		  0.,
+		  0.,
+		  x1*protonE};
+  p2 = (momentum){x2*protonE,
+		  0.,
+		  0.,
+		  -x2*protonE};
+  p3 = (momentum){(s*x1+t*x1-t*x2)*protonE/s,
+		  pt*cos(phi3),
+		  pt*sin(phi3),
+		  (s*x1+t*x1+t*x2)*protonE/s,};
+  p4 = (momentum){(s*x2-t*x1+t*x2)*protonE/s,
+		  -pt*cos(phi3),
+		  -pt*sin(phi3),
+		  (-s*x2-t*x1-t*x2)*protonE/s};
+
+  u = (p4-p1)*(p4-p1);
+
+  // debug output
+  cout << endl;
+  cout << "Momentum conservation checks (should be zero):" << endl;
+  cout << "  (p3+p4) - (p1+p2) = " << p3 + p4 - p1 - p2 << endl;
+  cout << "Mass-shell checks (should be zero):" << endl;
+  cout << "  p1^2 = " << p1*p1 << endl;
+  cout << "  p2^2 = " << p2*p2 << endl;
+  cout << "  p3^2 = " << p3*p3 << endl;
+  cout << "  p4^2 = " << p4*p4 << endl;
+  cout << "Mandelstam checks (should be zero):" << endl;
+  cout << "  s - (p1+p2)^2 = " << s - (p1+p2)*(p1+p2) << endl;
+  cout << "  s - (p3+p4)^2 = " << s - (p3+p4)*(p3+p4) << endl;
+  cout << "  t - (p3-p1)^2 = " << t - (p3-p1)*(p3-p1) << endl;
+  cout << "  t - (p4-p2)^2 = " << t - (p4-p2)*(p4-p2) << endl;
+  cout << "  u - (p4-p1)^2 = " << u - (p4-p1)*(p4-p1) << endl;
+  cout << "  u - (p3-p2)^2 = " << u - (p3-p2)*(p3-p2) << endl;
+  cout << endl;
 
   // Calculate Jacobian (to do)
   double JacobiDeterminant = 1.;
