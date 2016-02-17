@@ -62,6 +62,11 @@ Generator::~Generator()
 
 bool Generator::NewEvent(double z1, double z2, double z3, double z4)
 {
+  // debug output
+  cerr << endl;
+  cerr << "------------------------------------------------------------" << endl;
+
+  
   // Momenta in the proton-proton center-of-mass frame, all in GeV.
   // p1 and p2 are incoming momenta of u and ubar.
   // p3 and p4 are outgoing momenta of d and dbar.
@@ -183,8 +188,11 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   // Conversion from GeV^{-2}  to pb
   double conversionFactor = 389370000.;
 
+  // two assignments of quarks to protons
+  double multiplicityFactor = 2.;
+
   // Plug everything together
-  double weight = conversionFactor / (double) NEvents * JacobiDeterminant * dsigmadt * pdfFactor1 * pdfFactor2;
+  double weight = multiplicityFactor * conversionFactor / (double) NEvents * JacobiDeterminant * dsigmadt * pdfFactor1 * pdfFactor2;
 
   // Save result
   return SaveEvent(weight, p3, p4);
