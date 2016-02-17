@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <math.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 
 using namespace std;
@@ -42,6 +43,7 @@ class Generator
   int NEvents;
   double sqrtSMin;
   string filename;
+  string filenameKin;
   double xsec;
   int eventCounter;
 
@@ -49,4 +51,5 @@ class Generator
   double CalculateDSigmaDt(double s, double t, double u);
   double GetPDFValue(int pdgid, double x, double q);
   bool SaveEvent(double weight, momentum p3, momentum p4);
+  bool SaveKinematics(double weight, double y1 = 0, double y2 = 0, double y3 = 0, double y4 = 0, double y5 = 0, double y6 = 0, double y7 = 0, double y8 = 0);
 };

@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include "Generator.h"
+#include <fstream>
 
 using namespace std;
 
@@ -13,18 +14,27 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-  const int NEvents = 1000;
+  std::ifstream infile("inputFile.dat");
+  int nEvents = 0;
 
-  Generator* gen = new Generator(NEvents,100.);
+  double in1, in2, in3, in4;
+  while (infile >> in1 >> in2 >> in3 >> in4)
+  {
+     nEvents++;
+  }
+
+  infile.clear();
+  infile.seekg(0, ios::beg);
   
-  cout << endl;
-  cout << "------------------------------------------------------------" << endl;
+  cout << "nEvents = " << nEvents << "\n";
 
-  for (int i = 0; i < NEvents; i++) {
-    gen->NewEvent( (double) rand() / ((double) RAND_MAX + 1.),
-    		   (double) rand() / ((double) RAND_MAX + 1.),
-    		   (double) rand() / ((double) RAND_MAX + 1.),
-		   (double) rand() / ((double) RAND_MAX + 1.));
+  Generator* gen = new Generator(nEvents);
+
+  while (infile >> in1 >> in2 >> in3 >> in4)
+  {
+     cout << "in1 = " << in1 << ", in2 = " << in2 << ", in3 = " << in3 << ", in4 = " << in4 << "\n";
+     gen->NewEvent(in1, in2, in3, in4);
+     
   }
 
   cout << "------------------------------------------------------------" << endl;

@@ -27,10 +27,21 @@ Generator::Generator(int NEventsIn, double sqrtSMinIn, string filenameIn)
   }
 
   filename = filenameIn;
+  filenameKin = "debug.dat";
 
   // Initialize other variables
   eventCounter = 0;
   xsec = 0.;
+
+  // delete old output files
+  if( remove( filename.c_str() ) != 0 )
+    cout << "Error deleting file old output File.  Maybe it didn't exist?\n";
+  else
+    cout << "Old output file successfully deleted \n";
+  if( remove( filenameKin.c_str() ) != 0 )
+    cout << "Error deleting file old output File.  Maybe it didn't exist?\n";
+  else
+    cout << "Old output file successfully deleted \n";
 }
 
 
@@ -194,6 +205,9 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   // Plug everything together
   double weight = multiplicityFactor * conversionFactor / (double) NEvents * JacobiDeterminant * dsigmadt * pdfFactor1 * pdfFactor2;
 
+  // Save data to be plotted
+  SaveKinematics(weight, z1, z2, z3, z4, sqrt(s), sqrt(-t), sqrt(p3.px*p3.px + p3.py * p3.py));
+
   // Save result
   return SaveEvent(weight, p3, p4);
 }
@@ -275,15 +289,47 @@ bool Generator::SaveEvent(double weight, momentum p3, momentum p4)
   eventCounter++;
 
   if (weight > 0.) {
-    // for now: write on screen
-    cout << "Event " << eventCounter << ": p3 = (" << p3.E << ", " << p3.px << ", " << p3.py << ", " << p3.pz
-	 << "); p4 = (" << p4.E << ", " << p4.px << ", " << p4.py << ", " << p4.pz
-	 << ") -> weight = " << weight << endl;
+    ofstream outFile;
+    outFile.open(filename, ios::app);
+    
+    outFile << weight << " " << p3.E << " " << p3.px << " " << p3.py << " " << p3.pz << " " << p4.E << " " << p4.px << " " << p4.py << " " << p4.pz << "\n";
+    outFile.close();
+    
     return true;
   } else {
-    cout << "Event " << eventCounter << ": does not pass cuts" << endl;
     return true;
   }
+}
+
+
+
+//================================================================================//
+//                                                                                //
+// SaveEvent: Adds a line to the output file with the weight and momenta given.   //
+//            Returns true if succesful.                                          //
+//                                                                                //
+//================================================================================//
+
+bool Generator::SaveKinematics(double weight, double y1, double y2, double y3, double y4, double y5, double y6, double y7, double y8)
+{
+  string s = " ";
+
+  if (weight > 0.) {
+    
+    ofstream outFile;
+    outFile.open(filenameKin, ios::app);
+    
+    outFile << weight << s << y1
+	 << s << y2
+	 << s << y3
+	 << s << y4
+	 << s << y5
+	 << s << y6
+	 << s << y7
+	 << s << y8 << "\n";
+    outFile.close();
+  } 
+  return true;
 }
 
 
