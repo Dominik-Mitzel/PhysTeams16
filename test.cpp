@@ -13,9 +13,9 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-  const int NEvents = 10;
+  const int NEvents = 1000;
 
-  Generator* gen = new Generator(NEvents);
+  Generator* gen = new Generator(NEvents,100.);
   
   cout << endl;
   cout << "------------------------------------------------------------" << endl;

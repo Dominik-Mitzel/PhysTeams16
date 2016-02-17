@@ -46,7 +46,7 @@ class Generator
   int eventCounter;
 
   // Internal functions
-  double CalculateMSquared(double s, double t, double u);
+  double CalculateDSigmaDt(double s, double t, double u);
   double GetPDFValue(int pdgid, double x, double q);
   bool SaveEvent(double weight, momentum p3, momentum p4);
 };

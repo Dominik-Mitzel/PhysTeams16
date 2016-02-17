@@ -91,25 +91,30 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   // z3 sets t, normalized such that z3 = 0 -> t = -s and z3 = 1 -> t = 0
   // z4 sets phi of p3, normalised such that z4 = 1 -> phi = 2pi
   x1 = z1;
-  x2 = z2;
-
-  // avoid division by zero later
   if (x1 < 0.000000001) x1 = 0.000000001;
+  x2 = z2;
   if (x2 < 0.000000001) x2 = 0.000000001;
   
   s = x1*x2*protonS;
+
+  // Check if cut is satisfied
+  if (s < sqrtSMin*sqrtSMin) {
+    return SaveEvent(0., p3, p4);
+  }
+
+  
   t = -s + z3*s;
   phi3 = 2.*M_PI*z4;
 
   // Debug output
-  cout << endl;
-  cout << "Input kinematics:" << endl;
-  cout << "  x1 = " << x1 << endl;
-  cout << "  x2 = " << x2 << endl;
-  cout << "  s = " << s << endl;
-  cout << "  t = " << t << endl;
-  cout << "  phi3 = " << phi3 << endl;
-  cout << endl;
+  cerr << endl;
+  cerr << "Input kinematics:" << endl;
+  cerr << "  x1 = " << x1 << endl;
+  cerr << "  x2 = " << x2 << endl;
+  cerr << "  s = " << s << endl;
+  cerr << "  t = " << t << endl;
+  cerr << "  phi3 = " << phi3 << endl;
+  cerr << endl;
 
   // Calculate four-momenta based on x1, x2, s, t, phi3 (to do)
   double pt = sqrt(-t*(t+s)) / (sqrt(s));
@@ -134,31 +139,39 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   u = (p4-p1)*(p4-p1);
 
   // debug output
-  cout << endl;
-  cout << "Momentum conservation checks (should be zero):" << endl;
-  cout << "  (p3+p4) - (p1+p2) = " << p3 + p4 - p1 - p2 << endl;
-  cout << "Mass-shell checks (should be zero):" << endl;
-  cout << "  p1^2 = " << p1*p1 << endl;
-  cout << "  p2^2 = " << p2*p2 << endl;
-  cout << "  p3^2 = " << p3*p3 << endl;
-  cout << "  p4^2 = " << p4*p4 << endl;
-  cout << "Mandelstam checks (should be zero):" << endl;
-  cout << "  s - (p1+p2)^2 = " << s - (p1+p2)*(p1+p2) << endl;
-  cout << "  s - (p3+p4)^2 = " << s - (p3+p4)*(p3+p4) << endl;
-  cout << "  t - (p3-p1)^2 = " << t - (p3-p1)*(p3-p1) << endl;
-  cout << "  t - (p4-p2)^2 = " << t - (p4-p2)*(p4-p2) << endl;
-  cout << "  u - (p4-p1)^2 = " << u - (p4-p1)*(p4-p1) << endl;
-  cout << "  u - (p3-p2)^2 = " << u - (p3-p2)*(p3-p2) << endl;
-  cout << endl;
+  cerr << endl;
+  cerr << "Four-momenta:" << endl;
+  cerr << "  p1 = " << p1 << endl;
+  cerr << "  p2 = " << p2 << endl;
+  cerr << "  p3 = " << p3 << endl;
+  cerr << "  p4 = " << p4 << endl;
+  cerr << "Mandelstams:" << endl;
+  cerr << "  s = " << s << endl;
+  cerr << "  t = " << t << endl;
+  cerr << "  u = " << u << endl;
 
-  // Calculate Jacobian (to do)
-  double JacobiDeterminant = 1.;
+  // debug output
+  cerr << endl;
+  cerr << "Momentum conservation checks (should be zero):" << endl;
+  cerr << "  (p3+p4) - (p1+p2) = " << p3 + p4 - p1 - p2 << endl;
+  cerr << "Mass-shell checks (should be zero):" << endl;
+  cerr << "  p1^2 = " << p1*p1 << endl;
+  cerr << "  p2^2 = " << p2*p2 << endl;
+  cerr << "  p3^2 = " << p3*p3 << endl;
+  cerr << "  p4^2 = " << p4*p4 << endl;
+  cerr << "Mandelstam checks (should be zero):" << endl;
+  cerr << "  s - (p1+p2)^2 = " << s - (p1+p2)*(p1+p2) << endl;
+  cerr << "  s - (p3+p4)^2 = " << s - (p3+p4)*(p3+p4) << endl;
+  cerr << "  t - (p3-p1)^2 = " << t - (p3-p1)*(p3-p1) << endl;
+  cerr << "  t - (p4-p2)^2 = " << t - (p4-p2)*(p4-p2) << endl;
+  cerr << "  u - (p4-p1)^2 = " << u - (p4-p1)*(p4-p1) << endl;
+  cerr << "  u - (p3-p2)^2 = " << u - (p3-p2)*(p3-p2) << endl;
+  
+  // Calculate Jacobian
+  double JacobiDeterminant = s;
 
-  // Overall factor for hard matrix element (to do)
-  double overallConstant = 1./s;
-
-  // Calculate hard matrix elements (to do)
-  double MSquared = CalculateMSquared(s, t, u);
+  // Calculate hard matrix elements
+  double dsigmadt = CalculateDSigmaDt(s, t, u);
 
   // Pdfs
   double q = sqrt(s);
@@ -167,8 +180,11 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   double pdfFactor1 = GetPDFValue(pdgid1, x1, q);
   double pdfFactor2 = GetPDFValue(pdgid2, x2, q);
 
+  // Conversion from GeV^{-2}  to pb
+  double conversionFactor = 389370000.;
+
   // Plug everything together
-  double weight = 1 / (double) NEvents * overallConstant * JacobiDeterminant * MSquared * pdfFactor1 * pdfFactor2;
+  double weight = conversionFactor / (double) NEvents * JacobiDeterminant * dsigmadt * pdfFactor1 * pdfFactor2;
 
   // Save result
   return SaveEvent(weight, p3, p4);
@@ -178,28 +194,61 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
 
 //================================================================================//
 //                                                                                //
-// CalculateMSquared: Returns matrix element squared for u ubar -> d dbar,        //
+// CalculateDSigmaDt: Returns d sigma / d t squared for u ubar -> d dbar,         //
 //                    for the phase-space point given by the Mandelstam variables //
 //                    s, t, u                                                     //
 //                                                                                //
 //================================================================================//
 
-double Generator::CalculateMSquared(double s, double t, double u)
+double Generator::CalculateDSigmaDt(double s, double t, double u)
 {
-  return 1./pow(t,2); // to do
+  const double alphaS = 0.1;
+  if (t != 0. && s != 0. && u != 0.)
+    return 4.*M_PI*alphaS*alphaS/(9.*s*s) * (t*t + u*u)/(s*s);
+  return 0.;
+      
 }
 
 
 
 //================================================================================//
 //                                                                                //
-// GetPDFValue: Returns the value of the pdf                                      //
+// GetPDFValue: Returns the value of the pdf, following some weird paper          //
 //                                                                                //
 //================================================================================//
 
 double Generator::GetPDFValue(int pdgid, double x, double q)
 {
-  return 1.;
+  double a = 0;
+  double b = 0;
+  double n = 1;
+
+  if (x < 0.05) {
+    switch (pdgid) {
+    case 1:
+      a = 2.85;
+      b = 1.02;
+      n = 1.24;
+    case -1:
+      a = 6.26;
+      b = 1.50;
+      n = 19.46;
+    }
+  } else {
+    switch (pdgid) {
+    case 1:
+      a = 4.11;
+      b = 0.52;
+      n = 0.38;
+    case -1:
+      a = 6.69;
+      b = 1.48;
+      n = 17.0;
+    }
+  }
+
+  
+  return 1./n * pow(x,-b) * pow((1-x),a);
 }
 
 
@@ -216,12 +265,17 @@ bool Generator::SaveEvent(double weight, momentum p3, momentum p4)
   // Add weight to total xsec so far and increment event counter
   xsec += weight;
   eventCounter++;
-  
-  // for now: write on screen
-  cout << "Event " << eventCounter << ": p3 = (" << p3.E << ", " << p3.px << ", " << p3.py << ", " << p3.pz
-       << "); p4 = (" << p4.E << ", " << p4.px << ", " << p4.py << ", " << p4.pz
-       << ") -> weight = " << weight << endl;
-  return true;
+
+  if (weight > 0.) {
+    // for now: write on screen
+    cout << "Event " << eventCounter << ": p3 = (" << p3.E << ", " << p3.px << ", " << p3.py << ", " << p3.pz
+	 << "); p4 = (" << p4.E << ", " << p4.px << ", " << p4.py << ", " << p4.pz
+	 << ") -> weight = " << weight << endl;
+    return true;
+  } else {
+    cout << "Event " << eventCounter << ": does not pass cuts" << endl;
+    return true;
+  }
 }
 
 
