@@ -13,8 +13,6 @@
    while (1) {
      ncols = fscanf(fp,"%f %f %f %f %f %f %f %f",&w,&z1,&z2,&z3,&z4,&sqrts,&sqrtt,&pt);
      if (ncols < 0) break;    
-     //if (nlines < 5) printf("var1=%8f, var2=%8f\n",var1,var2);
-     //h1->Fill(var1);
      ntuple->Fill(w,z1,z2,z3,z4,sqrts,sqrtt,pt);
      nlines++;
    }
