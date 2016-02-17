@@ -310,7 +310,7 @@ bool Generator::SaveEvent(double weight, momentum p3, momentum p4)
 //                                                                                //
 //================================================================================//
 
-bool Generator::SaveKinematics(double weight, double y1, double y2, double y3, double y4, double y5, double y6, double y7, double y8)
+bool Generator::SaveKinematics(double weight, double y1, double y2, double y3, double y4, double y5, double y6, double y7)
 {
   string s = " ";
 
@@ -325,8 +325,7 @@ bool Generator::SaveKinematics(double weight, double y1, double y2, double y3, d
 	 << s << y4
 	 << s << y5
 	 << s << y6
-	 << s << y7
-	 << s << y8 << "\n";
+	 << s << y7 << "\n";
     outFile.close();
   } 
   return true;
