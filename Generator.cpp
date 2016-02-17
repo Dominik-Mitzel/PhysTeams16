@@ -319,13 +319,13 @@ bool Generator::SaveKinematics(double weight, double y1, double y2, double y3, d
     ofstream outFile;
     outFile.open(filenameKin, ios::app);
     
-    outFile << weight << s << y1
-	 << s << y2
-	 << s << y3
-	 << s << y4
-	 << s << y5
-	 << s << y6
-	 << s << y7 << "\n";
+    outFile << weight << "\t" << y1
+	 << "\t"  << y2
+	 << "\t"  << y3
+	 << "\t"  << y4
+	 << "\t"  << y5
+	 << "\t"  << y6
+	 << "\t"  << y7 << "\n";
     outFile.close();
   } 
   return true;
