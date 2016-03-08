@@ -2,7 +2,7 @@
  void createNtuple(){
    gROOT->Reset();
 
-   FILE *fp = fopen("debug.dat","r");
+   FILE *fp = fopen("kinematics.dat","r");
 
    Float_t w,z1,z2,z3,z4,sqrts, sqrtt, pt;
    Int_t ncols;

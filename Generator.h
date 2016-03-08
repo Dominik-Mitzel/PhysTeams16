@@ -28,7 +28,7 @@ class Generator
   }
 
   // Constructor and destructor
-  Generator(int NEventsIn, double sqrtSMinIn = 10., string filenameIn = "events.dat");
+  Generator(int NEventsIn, double sqrtSMinIn = 10., string filenameEvents = "events.dat", string filenameKinematics = "kinematics.dat");
   ~Generator();
 
   // Calculate new phase-space point described by four random numbers in [0,1]
@@ -37,15 +37,21 @@ class Generator
   // Get total XSec (once all events are generated)
   double GetXSec();
 
+  // Get total XSec (once all events are generated)
+  double GetNEvents();
+
   
  private:
   // Settings for event generation
   int NEvents;
   double sqrtSMin;
-  string filename;
+  string filenameEvts;
   string filenameKin;
   double xsec;
   int eventCounter;
+  int eventPastCutsCounter;
+  bool print_debug_output;
+  double xmin;
 
   // Internal functions
   double CalculateDSigmaDt(double s, double t, double u);

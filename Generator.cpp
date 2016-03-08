@@ -8,8 +8,31 @@
 //                                                                                //
 //================================================================================//
 
-Generator::Generator(int NEventsIn, double sqrtSMinIn, string filenameIn)
+Generator::Generator(int NEventsIn, double sqrtSMinIn, string filenameEvents, string filenameKinematics)
 {
+  cout << endl;
+  cout << endl;
+  cout << endl;
+  cout << "--------------------------------------------------------------------------------" << endl;
+  cout << "|                                                                              |" << endl;
+  cout << "|  Welcome to the RTG phase-space generator!                                   |" << endl;
+  cout << "|                                                                              |" << endl;
+  cout << "|            Svende Braun, Johann Brehmer, Manuel Geisler, Dominik Mitzel 2016 |" << endl;
+  cout << "|                                                                              |" << endl;
+  cout << "--------------------------------------------------------------------------------" << endl;
+  cout << endl;
+  cout << "Settings:" << endl;
+  cout << "  Process: u ubar -> d dbar in LO QCD" << endl;
+  cout << "  Beams: pp collisions at 13 TeV" << endl;
+  cout << "  PDFs: some weird numerical approximation" << endl;
+  cout << "  IR cut: sqrt(s) > " << sqrtSMinIn << " GeV" << endl;
+  cout << "  Number of events requested: " << NEventsIn << endl;
+  cout << "  Output files: " << filenameEvents << " (final-state four-vectors)" << endl;
+  cout << "                " << filenameKinematics << " (kinematic quantities for checks and plots)" << endl;
+  cout << endl;
+
+  // Print debug output?
+  print_debug_output = false;
 
   // Settings: total number of events, sqrt(S) cut, filename
   if (NEventsIn > 0) {
@@ -26,22 +49,28 @@ Generator::Generator(int NEventsIn, double sqrtSMinIn, string filenameIn)
     sqrtSMin = 10.;
   }
 
-  filename = filenameIn;
-  filenameKin = "debug.dat";
+  // cutoff in x for integration
+  xmin = 1.e-6;
+
+  filenameEvts = filenameEvents;
+  filenameKin = filenameKinematics;
 
   // Initialize other variables
   eventCounter = 0;
+  eventPastCutsCounter = 0;
   xsec = 0.;
 
   // delete old output files
-  if( remove( filename.c_str() ) != 0 )
-    cout << "Error deleting file old output File.  Maybe it didn't exist?\n";
-  else
-    cout << "Old output file successfully deleted \n";
-  if( remove( filenameKin.c_str() ) != 0 )
-    cout << "Error deleting file old output File.  Maybe it didn't exist?\n";
-  else
-    cout << "Old output file successfully deleted \n";
+  if( remove( filenameEvts.c_str() ) != 0 ) {
+    if (print_debug_output) cerr << "Couldn't delete file old events file.  Maybe it didn't exist?\n";
+  } else {
+    if (print_debug_output) cerr << "Old evemts file successfully deleted \n";
+  }
+  if( remove( filenameKin.c_str() ) != 0 ) {
+    if (print_debug_output) cerr << "Couldn't delete old kinematics File.  Maybe it didn't exist?\n";
+  } else {
+    if (print_debug_output) cerr << "Old kinematics file successfully deleted \n";
+  }
 }
 
 
@@ -74,10 +103,11 @@ Generator::~Generator()
 bool Generator::NewEvent(double z1, double z2, double z3, double z4)
 {
   // debug output
-  cerr << endl;
-  cerr << "------------------------------------------------------------" << endl;
+  if (print_debug_output) {
+    cerr << endl;
+    cerr << "------------------------------------------------------------" << endl;
+  }
 
-  
   // Momenta in the proton-proton center-of-mass frame, all in GeV.
   // p1 and p2 are incoming momenta of u and ubar.
   // p3 and p4 are outgoing momenta of d and dbar.
@@ -103,34 +133,33 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   
   // Transform z1 to z4 into kinematics
   // for now, just use a very-not-optimal scheme:
-  // z1 and z2 directly give x1 and x2, thus setting s
-  // z3 sets t, normalized such that z3 = 0 -> t = -s and z3 = 1 -> t = 0
-  // z4 sets phi of p3, normalised such that z4 = 1 -> phi = 2pi
-  x1 = z1;
-  if (x1 < 0.000000001) x1 = 0.000000001;
-  x2 = z2;
-  if (x2 < 0.000000001) x2 = 0.000000001;
-  
+  // z1 and z2  give 1 - A*log(x1) and 1-A* log(x2), with A = 1 / log (xmin)
+  // In this way z1 = 0 corresponds to x1 = xmin and z1 = 1 corresponds to x1 = 1
+  x1 = exp((1.-z1) * log(xmin));
+  x2 = exp((1.-z2) * log(xmin));
   s = x1*x2*protonS;
 
   // Check if cut is satisfied
   if (s < sqrtSMin*sqrtSMin) {
     return SaveEvent(0., p3, p4);
   }
-
   
+  // z3 sets t, normalized such that z3 = 0 -> t = -s and z3 = 1 -> t = 0
+  // z4 sets phi of p3, normalised such that z4 = 1 -> phi = 2pi
   t = -s + z3*s;
   phi3 = 2.*M_PI*z4;
 
   // Debug output
-  cerr << endl;
-  cerr << "Input kinematics:" << endl;
-  cerr << "  x1 = " << x1 << endl;
-  cerr << "  x2 = " << x2 << endl;
-  cerr << "  s = " << s << endl;
-  cerr << "  t = " << t << endl;
-  cerr << "  phi3 = " << phi3 << endl;
-  cerr << endl;
+  if (print_debug_output ) {
+    cerr << endl;
+    cerr << "Input kinematics:" << endl;
+    cerr << "  x1 = " << x1 << endl;
+    cerr << "  x2 = " << x2 << endl;
+    cerr << "  s = " << s << endl;
+    cerr << "  t = " << t << endl;
+    cerr << "  phi3 = " << phi3 << endl;
+    cerr << endl;
+  }
 
   // Calculate four-momenta based on x1, x2, s, t, phi3 (to do)
   double pt = sqrt(-t*(t+s)) / (sqrt(s));
@@ -155,36 +184,39 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   u = (p4-p1)*(p4-p1);
 
   // debug output
-  cerr << endl;
-  cerr << "Four-momenta:" << endl;
-  cerr << "  p1 = " << p1 << endl;
-  cerr << "  p2 = " << p2 << endl;
-  cerr << "  p3 = " << p3 << endl;
-  cerr << "  p4 = " << p4 << endl;
-  cerr << "Mandelstams:" << endl;
-  cerr << "  s = " << s << endl;
-  cerr << "  t = " << t << endl;
-  cerr << "  u = " << u << endl;
+  if (print_debug_output) {
+    cerr << endl;
+    cerr << "Four-momenta:" << endl;
+    cerr << "  p1 = " << p1 << endl;
+    cerr << "  p2 = " << p2 << endl;
+    cerr << "  p3 = " << p3 << endl;
+    cerr << "  p4 = " << p4 << endl;
+    cerr << "Mandelstams:" << endl;
+    cerr << "  s = " << s << endl;
+    cerr << "  t = " << t << endl;
+    cerr << "  u = " << u << endl;
+    cerr << endl;
+    cerr << "Momentum conservation checks (should be zero):" << endl;
+    cerr << "  (p3+p4) - (p1+p2) = " << p3 + p4 - p1 - p2 << endl;
+    cerr << "Mass-shell checks (should be zero):" << endl;
+    cerr << "  p1^2 = " << p1*p1 << endl;
+    cerr << "  p2^2 = " << p2*p2 << endl;
+    cerr << "  p3^2 = " << p3*p3 << endl;
+    cerr << "  p4^2 = " << p4*p4 << endl;
+    cerr << "Mandelstam checks (should be zero):" << endl;
+    cerr << "  s - (p1+p2)^2 = " << s - (p1+p2)*(p1+p2) << endl;
+    cerr << "  s - (p3+p4)^2 = " << s - (p3+p4)*(p3+p4) << endl;
+    cerr << "  t - (p3-p1)^2 = " << t - (p3-p1)*(p3-p1) << endl;
+    cerr << "  t - (p4-p2)^2 = " << t - (p4-p2)*(p4-p2) << endl;
+    cerr << "  u - (p4-p1)^2 = " << u - (p4-p1)*(p4-p1) << endl;
+    cerr << "  u - (p3-p2)^2 = " << u - (p3-p2)*(p3-p2) << endl;
+  }
 
-  // debug output
-  cerr << endl;
-  cerr << "Momentum conservation checks (should be zero):" << endl;
-  cerr << "  (p3+p4) - (p1+p2) = " << p3 + p4 - p1 - p2 << endl;
-  cerr << "Mass-shell checks (should be zero):" << endl;
-  cerr << "  p1^2 = " << p1*p1 << endl;
-  cerr << "  p2^2 = " << p2*p2 << endl;
-  cerr << "  p3^2 = " << p3*p3 << endl;
-  cerr << "  p4^2 = " << p4*p4 << endl;
-  cerr << "Mandelstam checks (should be zero):" << endl;
-  cerr << "  s - (p1+p2)^2 = " << s - (p1+p2)*(p1+p2) << endl;
-  cerr << "  s - (p3+p4)^2 = " << s - (p3+p4)*(p3+p4) << endl;
-  cerr << "  t - (p3-p1)^2 = " << t - (p3-p1)*(p3-p1) << endl;
-  cerr << "  t - (p4-p2)^2 = " << t - (p4-p2)*(p4-p2) << endl;
-  cerr << "  u - (p4-p1)^2 = " << u - (p4-p1)*(p4-p1) << endl;
-  cerr << "  u - (p3-p2)^2 = " << u - (p3-p2)*(p3-p2) << endl;
   
-  // Calculate Jacobian
-  double JacobiDeterminant = s;
+  // Calculate Jacobian. Two contributions: a factor s is there when sigma is expressed in terms of x1, x2, t and phi.
+  // The rest comes from the transformation of x1 and x2 from z1 and z2, see above
+  // Is a factor 2 pi from phi <-> z4 missing?! -> have to check
+  double JacobiDeterminant = s * (- x1 * log(xmin)) * (- x2 * log(xmin));
 
   // Calculate hard matrix elements
   double dsigmadt = CalculateDSigmaDt(s, t, u);
@@ -289,10 +321,21 @@ bool Generator::SaveEvent(double weight, momentum p3, momentum p4)
   eventCounter++;
 
   if (weight > 0.) {
-    ofstream outFile;
-    outFile.open(filename, ios::app);
+
+    eventPastCutsCounter++;
     
-    outFile << weight << " " << p3.E << " " << p3.px << " " << p3.py << " " << p3.pz << " " << p4.E << " " << p4.px << " " << p4.py << " " << p4.pz << "\n";
+    ofstream outFile;
+    outFile.open(filenameEvts, ios::app);
+    
+    outFile << weight
+	    << " " << p3.E
+	    << " " << p3.px
+	    << " " << p3.py
+	    << " " << p3.pz
+	    << " " << p4.E
+	    << " " << p4.px
+	    << " " << p4.py
+	    << " " << p4.pz << "\n";
     outFile.close();
     
     return true;
@@ -320,12 +363,12 @@ bool Generator::SaveKinematics(double weight, double y1, double y2, double y3, d
     outFile.open(filenameKin, ios::app);
     
     outFile << weight << "\t" << y1
-	 << "\t"  << y2
-	 << "\t"  << y3
-	 << "\t"  << y4
-	 << "\t"  << y5
-	 << "\t"  << y6
-	 << "\t"  << y7 << "\n";
+	    << "\t" << y2
+	    << "\t" << y3
+	    << "\t" << y4
+	    << "\t" << y5
+	    << "\t" << y6
+	    << "\t" << y7 << "\n";
     outFile.close();
   } 
   return true;
@@ -347,4 +390,18 @@ double Generator::GetXSec()
     return xsec * (double) NEvents / (double) eventCounter;
   else // no events generated yet
     return -1.;
+}
+
+
+
+
+//================================================================================//
+//                                                                                //
+// GetNEvents: Returns the number of calculated events (that pass the s cut)      //
+//                                                                                //
+//================================================================================//
+
+double Generator::GetNEvents()
+{
+  return eventPastCutsCounter;
 }
