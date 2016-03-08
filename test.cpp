@@ -18,19 +18,22 @@ int main(int argc, char* argv[])
   
   // for testing, let's just generate events with the C++ random number generator -- the inputFile does not contain enough events
   int nEvents = 1000000;
-  
-  Generator* gen = new Generator(nEvents);
+
+  // Generate events for sqrt(s) > 10 GeV
+  Generator* gen = new Generator(nEvents, 10.);
 
   cout << "Starting event generation!" << endl;
   
   for (int i = 0; i < nEvents; i++) {
+    if (i > 0 && i % ((int) nEvents / 10) == 0) cout << "  " << i << " phase-space points done..." << endl;
+    
     gen->NewEvent( (double) rand() / ((double) RAND_MAX + 1.),
      		   (double) rand() / ((double) RAND_MAX + 1.),
      		   (double) rand() / ((double) RAND_MAX + 1.),
  		   (double) rand() / ((double) RAND_MAX + 1.));
-    
-    if (i % ((int) nEvents / 10) == 1) cout << "  " << i - 1 << " phase-space points done..." << endl;
   }
+  cout << "  " << nEvents << " phase-space points done..." << endl;
+  
   
 
   // // alternative: use input file

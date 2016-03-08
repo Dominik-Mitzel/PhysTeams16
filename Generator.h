@@ -57,5 +57,5 @@ class Generator
   double CalculateDSigmaDt(double s, double t, double u);
   double GetPDFValue(int pdgid, double x, double q);
   bool SaveEvent(double weight, momentum p3, momentum p4);
-  bool SaveKinematics(double weight, double y1 = 0, double y2 = 0, double y3 = 0, double y4 = 0, double y5 = 0, double y6 = 0, double y7 = 0);
+  bool SaveKinematics(double weight, double y1 = 0, double y2 = 0, double y3 = 0, double y4 = 0, double y5 = 0, double y6 = 0, double y7 = 0, double y8 = 0, double y9 = 0);
 };

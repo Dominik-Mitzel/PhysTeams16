@@ -22,13 +22,13 @@ Generator::Generator(int NEventsIn, double sqrtSMinIn, string filenameEvents, st
   cout << "--------------------------------------------------------------------------------" << endl;
   cout << endl;
   cout << "Settings:" << endl;
-  cout << "  Process: u ubar -> d dbar in LO QCD" << endl;
-  cout << "  Beams: pp collisions at 13 TeV" << endl;
-  cout << "  PDFs: some weird numerical approximation" << endl;
-  cout << "  IR cut: sqrt(s) > " << sqrtSMinIn << " GeV" << endl;
-  cout << "  Number of events requested: " << NEventsIn << endl;
-  cout << "  Output files: " << filenameEvents << " (final-state four-vectors)" << endl;
-  cout << "                " << filenameKinematics << " (kinematic quantities for checks and plots)" << endl;
+  cout << "  Process:              u ubar -> d dbar in LO QCD" << endl;
+  cout << "  Beams:                pp collisions at 13 TeV" << endl;
+  cout << "  PDFs:                 analytical parametrization by K. Armour, M. Bowen, S. Ellis, M. Strassler 2004" << endl;
+  cout << "  IR cut:               sqrt(s) > " << sqrtSMinIn << " GeV" << endl;
+  cout << "  # phase-space points: " << NEventsIn << endl;
+  cout << "  Output files:         " << filenameEvents << " (final-state four-vectors)" << endl;
+  cout << "                        " << filenameKinematics << " (kinematic quantities for checks and plots)" << endl;
   cout << endl;
 
   // Print debug output?
@@ -42,7 +42,7 @@ Generator::Generator(int NEventsIn, double sqrtSMinIn, string filenameEvents, st
     NEvents = 1;
   }
 
-  if (sqrtSMinIn > 0.)
+  if (sqrtSMinIn > 0. && sqrtSMinIn < 13000.)
     sqrtSMin = sqrtSMinIn;
   else {
     cout << "Warning: sqrtSMin given as " << sqrtSMinIn << ", use default 10 instead!";
@@ -50,7 +50,10 @@ Generator::Generator(int NEventsIn, double sqrtSMinIn, string filenameEvents, st
   }
 
   // cutoff in x for integration
-  xmin = 1.e-6;
+  xmin = 1.e-8 * sqrtSMin * sqrtSMin;
+
+  if (xmin > 0.001)
+    xmin = 0.001;
 
   filenameEvts = filenameEvents;
   filenameKin = filenameKinematics;
@@ -238,7 +241,7 @@ bool Generator::NewEvent(double z1, double z2, double z3, double z4)
   double weight = multiplicityFactor * conversionFactor / (double) NEvents * JacobiDeterminant * dsigmadt * pdfFactor1 * pdfFactor2;
 
   // Save data to be plotted
-  SaveKinematics(weight, z1, z2, z3, z4, sqrt(s), sqrt(-t), sqrt(p3.px*p3.px + p3.py * p3.py));
+  SaveKinematics(weight, z1, z2, z3, z4, sqrt(s), sqrt(-t), sqrt(p3.px*p3.px + p3.py * p3.py), x1, x2);
 
   // Save result
   return SaveEvent(weight, p3, p4);
@@ -353,7 +356,7 @@ bool Generator::SaveEvent(double weight, momentum p3, momentum p4)
 //                                                                                //
 //================================================================================//
 
-bool Generator::SaveKinematics(double weight, double y1, double y2, double y3, double y4, double y5, double y6, double y7)
+bool Generator::SaveKinematics(double weight, double y1, double y2, double y3, double y4, double y5, double y6, double y7, double y8, double y9)
 {
   string s = " ";
 
@@ -368,7 +371,9 @@ bool Generator::SaveKinematics(double weight, double y1, double y2, double y3, d
 	    << "\t" << y4
 	    << "\t" << y5
 	    << "\t" << y6
-	    << "\t" << y7 << "\n";
+	    << "\t" << y7 
+	    << "\t" << y8
+	    << "\t" << y9 << "\n";
     outFile.close();
   } 
   return true;
